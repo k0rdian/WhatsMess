@@ -4,6 +4,18 @@ WhatsMess to darmowa aplikacja desktopowa na macOS, ktora laczy Facebooka Messen
 
 ---
 
+## Zrzuty ekranu
+
+![Ekran glowny](screenshots/4.png)
+
+![Widok rozmowy](screenshots/3.png)
+
+![Przelaczanie komunikatorow](screenshots/2.png)
+
+![Konfiguracja](screenshots/1.png)
+
+---
+
 ## Funkcje
 
 - **Messenger i WhatsApp w jednej aplikacji** - nie musisz juz przeskakiwac miedzy przegladarka a osobnymi oknami. Wszystkie rozmowy sa dostepne w jednym miejscu.
