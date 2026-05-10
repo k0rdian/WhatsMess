@@ -1,16 +1,16 @@
 # WhatsMess - Komunikatory w jednym oknie na macOS
 
-WhatsMess to darmowa aplikacja desktopowa na macOS, ktora laczy Facebooka Messenger i WhatsApp w jednym wygodnym oknie. Zbudowana w oparciu o Electron, zapewnia natywne powiadomienia systemowe, szybkie przelaczanie miedzy komunikatorami i nowoczesny, ciemny interfejs.
+WhatsMess to darmowa aplikacja desktopowa na macOS, która łączy Facebooka Messenger i WhatsApp w jednym wygodnym oknie. Zbudowana w oparciu o Electron, zapewnia natywne powiadomienia systemowe, szybkie przełączanie między komunikatorami i nowoczesny, ciemny interfejs.
 
 ---
 
 ## Zrzuty ekranu
 
-![Ekran glowny](screenshots/4.png)
+![Ekran główny](screenshots/4.png)
 
 ![Widok rozmowy](screenshots/3.png)
 
-![Przelaczanie komunikatorow](screenshots/2.png)
+![Przełączanie komunikatorów](screenshots/2.png)
 
 ![Konfiguracja](screenshots/1.png)
 
@@ -18,14 +18,14 @@ WhatsMess to darmowa aplikacja desktopowa na macOS, ktora laczy Facebooka Messen
 
 ## Funkcje
 
-- **Messenger i WhatsApp w jednej aplikacji** - nie musisz juz przeskakiwac miedzy przegladarka a osobnymi oknami. Wszystkie rozmowy sa dostepne w jednym miejscu.
-- **Natywne powiadomienia macOS** - aplikacja wysyla powiadomienia systemowe o nowych wiadomosciach. Klikniecie powiadomienia przenosi do odpowiedniej zakladki.
-- **Zarzadzanie uprawnieniami powiadomien** - wbudowany przycisk do wymuszenia zapytania systemowego o pozwolenie na powiadomienia oraz szybki dostep do ustawien systemowych.
+- **Messenger i WhatsApp w jednej aplikacji** - nie musisz już przeskakiwać między przeglądarką a osobnymi oknami. Wszystkie rozmowy są dostępne w jednym miejscu.
+- **Natywne powiadomienia macOS** - aplikacja wysyła powiadomienia systemowe o nowych wiadomościach. Kliknięcie powiadomienia przenosi do odpowiedniej zakładki.
+- **Zarządzanie uprawnieniami powiadomień** - wbudowany przycisk do wymuszenia zapytania systemowego o pozwolenie na powiadomienia oraz szybki dostęp do ustawień systemowych.
 - **Ciemny interfejs** - nowoczesny, minimalistyczny design dopasowany do systemu macOS.
-- **Zakladki z licznikami** - widoczna liczba nieprzeczytanych wiadomosci dla kazdego komunikatora.
-- **Niezalezne sesje** - kazdy komunikator dziala w oddzielnej sesji, co oznacza niezalezne logowanie i przechowywanie danych.
-- **Konfiguracja przy pierwszym uruchomieniu** - kreator pozwala wybrac, ktore komunikatory chcesz uzywac.
-- **Praca w tle** - zamkniecie okna minimalizuje aplikacje do Docka zamiast ja konczyc.
+- **Zakładki z licznikami** - widoczna liczba nieprzeczytanych wiadomości dla każdego komunikatora.
+- **Niezależne sesje** - każdy komunikator działa w oddzielnej sesji, co oznacza niezależne logowanie i przechowywanie danych.
+- **Konfiguracja przy pierwszym uruchomieniu** - kreator pozwala wybrać, które komunikatory chcesz używać.
+- **Praca w tle** - zamknięcie okna minimalizuje aplikację do Docka zamiast ją kończyć.
 
 ---
 
@@ -40,13 +40,13 @@ WhatsMess to darmowa aplikacja desktopowa na macOS, ktora laczy Facebooka Messen
 
 ### Gotowa paczka DMG
 
-1. Pobierz najnowszy plik DMG z zakladki [Releases](https://github.com/k0rdian/WhatsMess/releases).
-2. Otworz plik DMG i przeciagnij aplikacje do folderu Aplikacje.
+1. Pobierz najnowszy plik DMG z zakładki [Releases](https://github.com/k0rdian/WhatsMess/releases).
+2. Otwórz plik DMG i przeciągnij aplikację do folderu Aplikacje.
 3. Uruchom WhatsMess z Launchpada lub folderu Aplikacje.
 
-Uwaga: przy pierwszym uruchomieniu macOS moze wyswietlic ostrzezenie o nieznanym deweloperze. Aby je ominac, kliknij prawym przyciskiem myszy na aplikacje i wybierz "Otworz".
+Uwaga: przy pierwszym uruchomieniu macOS może wyświetlić ostrzeżenie o nieznanym deweloperze. Aby je ominąć, kliknij prawym przyciskiem myszy na aplikację i wybierz "Otwórz".
 
-### Budowanie ze zrodla
+### Budowanie ze źródła
 
 ```bash
 git clone https://github.com/k0rdian/WhatsMess.git
@@ -77,10 +77,10 @@ WhatsMess/
 │   └── entitlements.mac.plist
 ├── src/
 │   ├── assets/             # Zasoby aplikacji
-│   │   └── ikona.png       # Ikona wyswietlana w interfejsie
-│   ├── main.js             # Proces glowny Electron
+│   │   └── ikona.png       # Ikona wyświetlana w interfejsie
+│   ├── main.js             # Proces główny Electron
 │   ├── preload.js          # Skrypt preload (most IPC)
-│   ├── webview-preload.js  # Skrypt preload dla webview (przechwytywanie powiadomien)
+│   ├── webview-preload.js  # Skrypt preload dla webview (przechwytywanie powiadomień)
 │   ├── renderer.js         # Logika interfejsu
 │   ├── index.html          # Struktura interfejsu
 │   └── styles.css          # Style CSS
@@ -90,40 +90,40 @@ WhatsMess/
 
 ---
 
-## Jak dzialaja powiadomienia
+## Jak działają powiadomienia
 
 WhatsMess przechwytuje powiadomienia z Messengera i WhatsApp na dwa sposoby:
 
-1. **Przechwytywanie API Notification** - skrypt wstrzykniety do webview nadpisuje natywny obiekt `Notification` przegladarki i przekazuje dane do procesu glownego Electron, ktory wyswietla natywne powiadomienie macOS.
+1. **Przechwytywanie API Notification** - skrypt wstrzyknięty do webview nadpisuje natywny obiekt `Notification` przeglądarki i przekazuje dane do procesu głównego Electron, który wyświetla natywne powiadomienie macOS.
 
-2. **Monitorowanie tytulu strony** - aplikacja sledzi zmiany w tytule strony (np. "(3) Messenger"), wykrywa nowe nieprzeczytane wiadomosci i generuje powiadomienie.
+2. **Monitorowanie tytułu strony** - aplikacja śledzi zmiany w tytule strony (np. "(3) Messenger"), wykrywa nowe nieprzeczytane wiadomości i generuje powiadomienie.
 
-Jesli macOS nie wyswietla powiadomien, wejdz w Ustawienia aplikacji i uzyj przycisku "Wymusz zapytanie o uprawnienia" w sekcji "Uprawnienia systemowe". Mozesz tez otworzyc ustawienia systemowe powiadomien bezposrednio z aplikacji.
+Jeśli macOS nie wyświetla powiadomień, wejdź w Ustawienia aplikacji i użyj przycisku "Wymuś zapytanie o uprawnienia" w sekcji "Uprawnienia systemowe". Możesz też otworzyć ustawienia systemowe powiadomień bezpośrednio z aplikacji.
 
 ---
 
 ## Ustawienia
 
-Panel ustawien (ikona zebatki w prawym gornym rogu) pozwala na:
+Panel ustawień (ikona zębatki w prawym górnym rogu) pozwala na:
 
-- Wlaczanie i wylaczanie poszczegolnych komunikatorow
-- Zarzadzanie powiadomieniami dla kazdego komunikatora osobno
-- Wymuszenie zapytania o uprawnienia do powiadomien systemowych
-- Otwarcie ustawien systemowych macOS dotyczacych powiadomien
+- Włączanie i wyłączanie poszczególnych komunikatorów
+- Zarządzanie powiadomieniami dla każdego komunikatora osobno
+- Wymuszenie zapytania o uprawnienia do powiadomień systemowych
+- Otwarcie ustawień systemowych macOS dotyczących powiadomień
 
 ---
 
-## Uzyte technologie
+## Użyte technologie
 
-- [Electron](https://www.electronjs.org/) - framework do budowania aplikacji desktopowych z uzyciem technologii webowych
-- [electron-builder](https://www.electron.build/) - narzedzie do pakowania i dystrybucji aplikacji Electron
-- HTML, CSS, JavaScript - interfejs uzytkownika
+- [Electron](https://www.electronjs.org/) - framework do budowania aplikacji desktopowych z użyciem technologii webowych
+- [electron-builder](https://www.electron.build/) - narzędzie do pakowania i dystrybucji aplikacji Electron
+- HTML, CSS, JavaScript - interfejs użytkownika
 
 ---
 
 ## Licencja
 
-Projekt udostepniony na licencji MIT. Szczegoly w pliku [LICENSE](LICENSE).
+Projekt udostępniony na licencji MIT. Szczegóły w pliku [LICENSE](LICENSE).
 
 ---
 
