@@ -1,0 +1,40 @@
+{
+  "name": "whatsmess",
+  "version": "1.0.0",
+  "description": "Unified Messenger & WhatsApp desktop client",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "author": "WhatsMess",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.whatsmess.app",
+    "productName": "WhatsMess",
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.social-networking",
+      "icon": "build/icon.icns"
+    },
+    "dmg": {
+      "title": "WhatsMess",
+      "icon": "build/icon.icns"
+    },
+    "files": [
+      "src/**/*",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    }
+  }
+}
