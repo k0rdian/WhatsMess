@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   clickInWebview: (webContentsId, x, y) => ipcRenderer.invoke('click-in-webview', { webContentsId, x, y }),
   getWebviewPreloadPath: () => ipcRenderer.invoke('get-webview-preload-path'),
   getIconUrl: () => ipcRenderer.invoke('get-icon-url'),
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   requestNotificationPermission: () => ipcRenderer.invoke('request-notification-permission'),
   getNotificationStatus: () => ipcRenderer.invoke('get-notification-status'),
   openNotificationSettings: () => ipcRenderer.invoke('open-notification-settings'),

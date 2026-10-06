@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Notification, session, nativeImage, systemPreferences, shell, powerMonitor, webContents } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, session, nativeImage, systemPreferences, shell, powerMonitor, webContents, Menu, clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -84,6 +84,10 @@ app.on('web-contents-created', (event, contents) => {
     callback(allowedPermissions.includes(permission));
   });
 
+  if (contents.getType() === 'webview') {
+    contents.on('context-menu', (event, params) => showContextMenu(contents, params));
+  }
+
   if (DEBUG && contents.getType() === 'webview') {
     contents.on('console-message', (event) => {
       if (String(event.message).startsWith('[WhatsMess]')) console.log(event.message);
@@ -96,6 +100,100 @@ app.on('web-contents-created', (event, contents) => {
     callback({ cancel: false, requestHeaders: details.requestHeaders });
   });
 });
+
+// Copy the image that was right-clicked, by its address - not whatever is
+// under the pointer when the menu item is chosen (a busy chat may scroll while
+// the menu is open). The pixel-based copy is the fallback.
+async function copyImage(contents, { srcURL, frame, x, y }) {
+  try {
+    let image = null;
+    if (/^https?:/i.test(srcURL)) {
+      const response = await contents.session.fetch(srcURL, { signal: AbortSignal.timeout(5000) });
+      if (response.ok) image = nativeImage.createFromBuffer(Buffer.from(await response.arrayBuffer()));
+    } else if (/^(blob|data):/i.test(srcURL) && frame && !frame.isDestroyed()) {
+      // blob: images (WhatsApp) only exist inside the page: redraw as PNG there
+      const dataUrl = await frame.executeJavaScript(`(${imageToPngDataUrl})(${JSON.stringify(srcURL)})`);
+      if (dataUrl) image = nativeImage.createFromDataURL(dataUrl);
+    }
+    if (image && !image.isEmpty()) {
+      clipboard.writeImage(image);
+      return;
+    }
+  } catch (e) { /* use the pixel-based copy */ }
+  if (!contents.isDestroyed()) contents.copyImageAt(x, y);
+}
+
+// Runs in the page (serialized): the <img> with that address as a PNG data URL
+function imageToPngDataUrl(src) {
+  const img = [...document.images].find((candidate) => candidate.currentSrc === src || candidate.src === src);
+  if (!img || !img.complete || !img.naturalWidth) return '';
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  canvas.getContext('2d').drawImage(img, 0, 0);
+  return canvas.toDataURL('image/png');
+}
+
+// Right-click menu inside Messenger and WhatsApp (Electron has none by default)
+function showContextMenu(contents, params) {
+  const items = [];
+  const separator = () => {
+    if (items.length && items[items.length - 1].type !== 'separator') items.push({ type: 'separator' });
+  };
+  const editFlags = params.editFlags || {};
+
+  if (params.misspelledWord) {
+    for (const suggestion of params.dictionarySuggestions.slice(0, 5)) {
+      items.push({ label: suggestion, click: () => contents.replaceMisspelling(suggestion) });
+    }
+    if (!params.dictionarySuggestions.length) items.push({ label: 'Brak podpowiedzi', enabled: false });
+    items.push({
+      label: 'Dodaj do słownika',
+      click: () => contents.session.addWordToSpellCheckerDictionary(params.misspelledWord),
+    });
+    separator();
+  }
+
+  if (params.mediaType === 'image' && params.hasImageContents !== false) {
+    items.push({ label: 'Kopiuj obraz', click: () => copyImage(contents, params) });
+    if (/^(https?|blob|data):/i.test(params.srcURL)) {
+      items.push({ label: 'Zapisz obraz jako...', click: () => contents.downloadURL(params.srcURL) });
+    }
+    if (/^https?:/i.test(params.srcURL)) {
+      items.push({ label: 'Kopiuj adres obrazu', click: () => clipboard.writeText(params.srcURL) });
+    }
+    separator();
+  }
+
+  if (/^https?:/i.test(params.linkURL)) {
+    items.push({ label: 'Otwórz link w przeglądarce', click: () => shell.openExternal(params.linkURL) });
+    items.push({ label: 'Kopiuj adres linku', click: () => clipboard.writeText(params.linkURL) });
+    separator();
+  }
+
+  if (params.isEditable) {
+    items.push(
+      { label: 'Cofnij', enabled: !!editFlags.canUndo, click: () => contents.undo() },
+      { label: 'Ponów', enabled: !!editFlags.canRedo, click: () => contents.redo() },
+      { type: 'separator' },
+      { label: 'Wytnij', enabled: !!editFlags.canCut, click: () => contents.cut() },
+      { label: 'Kopiuj', enabled: !!editFlags.canCopy, click: () => contents.copy() },
+      { label: 'Wklej', enabled: !!editFlags.canPaste, click: () => contents.paste() },
+      { label: 'Zaznacz wszystko', enabled: !!editFlags.canSelectAll, click: () => contents.selectAll() },
+    );
+  } else if (params.selectionText && params.selectionText.trim()) {
+    items.push({ label: 'Kopiuj', click: () => contents.copy() });
+  }
+
+  if (DEBUG) {
+    separator();
+    items.push({ label: 'Zbadaj element', click: () => contents.inspectElement(params.x, params.y) });
+  }
+
+  while (items.length && items[items.length - 1].type === 'separator') items.pop();
+  if (!items.length) return;
+  Menu.buildFromTemplate(items).popup({ window: mainWindow || undefined });
+}
 
 // IPC Handlers
 ipcMain.handle('get-settings', () => {
@@ -342,6 +440,9 @@ ipcMain.handle('get-webview-preload-path', () => {
 ipcMain.handle('get-icon-url', () => {
   return 'file://' + path.join(__dirname, 'assets', 'ikona.png').replace(/\\/g, '/');
 });
+
+// Version shown in Settings (from package.json, also for test builds)
+ipcMain.handle('get-app-version', () => app.getVersion());
 
 // App lifecycle
 app.whenReady().then(() => {

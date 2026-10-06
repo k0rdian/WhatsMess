@@ -762,17 +762,52 @@ const { contextBridge, ipcRenderer, webFrame } = require('electron');
   function reportLayout() {
     if (!chatFeedEnabled) return;
     let right = 0;
+    let covered = false;
     try {
       const pane = adapter.listPane();
       right = pane ? Math.round(pane.getBoundingClientRect().right) : 0;
+      covered = !!pane && isCovered(pane);
     } catch (e) {
       right = 0;
     }
     if (right <= 0 || right > window.innerWidth * 0.75) right = 0;
     const width = window.innerWidth;
-    if (lastLayout && Math.abs(right - lastLayout.listRight) < 2 && width === lastLayout.width) return;
-    lastLayout = { listRight: right, width };
+    if (lastLayout && Math.abs(right - lastLayout.listRight) < 2 && width === lastLayout.width &&
+        covered === lastLayout.covered) return;
+    lastLayout = { listRight: right, width, covered };
     ipcRenderer.sendToHost('layout', lastLayout);
+  }
+
+  // Something on top of the page's own list - a photo viewer, a dialog -
+  // usually spans the whole page, and its left part would sit under the
+  // shared panel. Probe the middle of the list: what is there instead?
+  function isCovered(pane) {
+    const rect = pane.getBoundingClientRect();
+    if (rect.width < 20 || rect.height < 60) return false;
+    const x = rect.left + rect.width / 2;
+    const hits = [0.3, 0.5, 0.7].filter((fraction) => {
+      let element = document.elementFromPoint(x, rect.top + rect.height * fraction);
+      if (!element || pane.contains(element)) return false;
+      // A viewer or a dialog reaches into the conversation area; a drawer
+      // opened over the list column (Archived, Settings...) does not
+      let right = 0;
+      while (element && !element.contains(pane)) {
+        right = Math.max(right, element.getBoundingClientRect().right);
+        element = element.parentElement;
+      }
+      return right > rect.right + 40;
+    });
+    return hits.length >= 2;
+  }
+
+  // Overlays should be noticed quickly (the scan itself waits a second)
+  let layoutTimer = null;
+  function requestLayout() {
+    if (!chatFeedEnabled || layoutTimer) return;
+    layoutTimer = setTimeout(() => {
+      layoutTimer = null;
+      reportLayout();
+    }, 150);
   }
 
   ipcRenderer.on('set-chat-feed', (event, value) => {
@@ -997,6 +1032,7 @@ const { contextBridge, ipcRenderer, webFrame } = require('electron');
     new MutationObserver(() => {
       checkTitle();
       requestScan();
+      requestLayout();
     }).observe(document, { childList: true, subtree: true, characterData: true });
     setInterval(() => {
       if (titleUnknown) lastTitle = null; // look at it again

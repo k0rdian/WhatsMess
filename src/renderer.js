@@ -41,6 +41,7 @@
     document.querySelectorAll('.logo-img, .about-logo').forEach((img) => {
       img.src = iconUrl;
     });
+    document.getElementById('app-version').textContent = `Wersja ${await window.electronAPI.getAppVersion()}`;
   } catch (e) {
     console.error('Failed to get paths from main process:', e);
   }
@@ -191,6 +192,7 @@
         webview.send('set-chat-feed', !!settings.unifiedInbox);
         if (settings.unifiedInbox) feedRequestedAt = Date.now();
         delete clipHistory[serviceKey]; // a (re)loaded page settles from scratch
+        webview.classList.remove('expanded');
         if (unifiedView) webview.send('unified-visible');
         if (serviceKey === activeService && !webview.dataset.focused) {
           webview.dataset.focused = 'true';
@@ -282,8 +284,10 @@
     document.querySelectorAll('webview').forEach((wv) => {
       wv.classList.toggle('active', wv.dataset.service === activeService);
       sendVisibility(wv, wv.dataset.service);
-      // Entering the shared view: the pages measure their lists again
+      // Entering the shared view: the pages measure their lists again (an
+      // open photo viewer is reported again too)
       if (showUnified && !unifiedShown) {
+        wv.classList.remove('expanded');
         delete clipHistory[wv.dataset.service];
         try {
           wv.send('unified-visible');
@@ -301,8 +305,19 @@
   // changing without the window being resized, the page's breakpoints make it
   // flip between widths: settle on the smallest one (a strip of the page's
   // list may show, but no part of the conversation is hidden).
-  function applyClip(webview, serviceKey, { listRight, width }) {
+  function applyClip(webview, serviceKey, { listRight, width, covered }) {
+    // The photo viewer or dialog was closed (possibly in the service's own tab)
+    if (!covered && webview.classList.contains('expanded')) {
+      webview.classList.remove('expanded');
+      return; // measured at the full width; the report after the resize counts
+    }
     if (!unifiedView) return; // full width in the service tabs: keep the shared view's value
+    // A photo viewer or dialog covers the page's list: give the page the whole
+    // width, above the shared panel, until it closes
+    if (covered) {
+      webview.classList.add('expanded');
+      return;
+    }
     const scale = width > 0 ? webview.getBoundingClientRect().width / width : 1;
     const clip = Math.max(0, Math.round((Number(listRight) || 0) * scale));
     if (!clip) {
